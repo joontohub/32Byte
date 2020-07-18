@@ -1,19 +1,34 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdint.h>
+#include <stddef.h>
 
 
+unsigned int my_ntohl(unsigned int n)
+{
+	unsigned int n1 = (n & 0xFF000000) >> 24;
+	unsigned int n2 = (n & 0x00FF0000) >> 8;
+	unsigned int n3 = (n & 0x0000FF00) << 8;
+	unsigned int n4 = (n & 0x000000FF) << 24;
+	
+	return n4|n3|n2|n1;
+}
+unsigned int  write_0x(unsigned int buffer) {
+	unsigned int network_buffer[] = { buffer };
+	unsigned int* p = reinterpret_cast<unsigned int*>(network_buffer);
+	unsigned int n = my_ntohl(*p); 
+	//printf("32 bit number=0x%x\n", n);
+    return n;
+}
 int main(int argc , char* argv[]){
     FILE *fd1;
     FILE *fd2;
 
     long fd1Size;
     long fd2Size;
-    uint32_t* buffer1[50];
-    uint32_t* buffer2[50];
-    uint32_t val1;
-    uint32_t val2;
-    uint32_t val3;
+    unsigned int buffer1[5] = {0,};
+    unsigned int buffer2[5] = {0,};
+
     
     fd1 = fopen(argv[1],"rb") ;
     fd2 = fopen(argv[2],"rb");
@@ -27,13 +42,13 @@ int main(int argc , char* argv[]){
     rewind(fd1);
     rewind(fd2);
 
-    val1 = fread(buffer1,4,fd1Size,fd1);
-    printf("val1 : %#x\n",val1);
-    val2 = fread(buffer2,sizeof(int),fd2Size,fd2);
-    printf("val2 : %#x\n",val2);
-    val3 = val1 + val2;
-    printf("%d(%#x) + %d(%#x) = %d(%#x)\n",val1,val1,val2,val2,val3,val3);
+    fread(buffer1,1,4,fd1);
+    unsigned int a = write_0x(buffer1[0]);
 
+    fread(buffer2,1,4,fd2);
+    unsigned int b = write_0x(buffer2[0]);
+    unsigned int c = a + b;
+    printf("%d(0x%x) + %d(0x%x) = %d(0x%x)\n",a,a,b,b,c,c);
     fclose(fd2);
     fclose(fd1);
     
